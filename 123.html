@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>我的导航</title>
+  <style>
+    /*
+    =============================================
+    移动端网页导航模板（单文件，可自定义链接）
+    — 使用方式 —
+    1）修改下方 LINKS_DEFAULT 中的示例链接即可自定义导航项。
+    2）页面右上角“编辑”可在手机上添加/删除链接（本地保存）。
+    3）需要重置为默认示例，点“更多 → 恢复默认”。
+    4）配色可改：:root 中的 CSS 变量，或切换深浅色。
+    =============================================
+    */
+
+    /* 设计令牌（你可以在这里快速改主题） */
+    :root {
+      --bg: #0b1020;            /* 背景 */
+      --card: #121933;          /* 卡片背景 */
+      --card-press: #0f152b;    /* 卡片按下 */
+      --text: #e5ecff;          /* 文字 */
+      --subtle: #9fb0ffcc;      /* 次要文字 */
+      --accent: #4f8cff;        /* 重点色/按钮 */
+      --ring: #7aa2ff;          /* 焦点描边 */
+      --muted: #0a122b;         /* 顶栏/输入背景 */
+      --border: #20305e;        /* 边框线 */
+      --shadow: 0 6px 24px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.25);
+      --radius: 18px;           /* 统一圆角 */
+      --tap: 56px;              /* 触控目标大小 */
+      --safe-bottom: env(safe-area-inset-bottom); /* iOS 底部安全区 */
+    }
+
+    /* 亮色主题（可选） */
+    html[data-theme="light"] {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --card-press: #f3f5fb;
+      --text: #0e1326;
+      --subtle: #51607a;
+      --accent: #245bff;
+      --ring: #2a62ff;
+      --muted: #eef2ff;
+      --border: #e6e9f3;
+      --shadow: 0 6px 24px rgba(13, 21, 40, .08), 0 2px 6px rgba(13, 21, 40, .05);
+    }
+
+    /* 跟随系统（默认） */
+    @media (prefers-color-scheme: light) {
+      html[data-theme="auto"] { color-scheme: light; }
+    }
+    @media (prefers-color-scheme: dark) {
+      html[data-theme="auto"] { color-scheme: dark; }
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: linear-gradient(180deg, var(--bg), color-mix(in srgb, var(--bg), #000 6%));
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 顶栏 */
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      padding: 12px max(12px, env(safe-area-inset-left)) 10px max(12px, env(safe-area-inset-right));
+      backdrop-filter: saturate(1.2) blur(10px);
+      background: color-mix(in srgb, var(--bg), #000 20%);
+      border-bottom: 1px solid var(--border);
+      display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center;
+    }
+    .title {
+      font-weight: 700; letter-spacing: .4px; font-size: 18px;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .title .badge { font-size: 11px; color: var(--subtle); border: 1px solid var(--border); padding: 2px 6px; border-radius: 999px; }
+
+    .iconbtn {
+      display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 12px;
+      background: var(--muted); border: 1px solid var(--border); color: var(--text);
+      box-shadow: var(--shadow);
+    }
+    .iconbtn:active { transform: scale(.98); }
+
+    /* 搜索框 */
+    .search-wrap { padding: 12px 12px 2px; }
+    .search {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--muted); border: 1px solid var(--border); border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .search input {
+      flex: 1; background: transparent; border: none; outline: none; color: var(--text);
+      font-size: 16px; min-height: 28px;
+    }
+    .search .key { font-size: 12px; color: var(--subtle); border: 1px solid var(--border); padding: 2px 6px; border-radius: 8px; }
+
+    /* 网格 */
+    .grid { padding: 8px 12px calc(80px + var(--safe-bottom)); display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+    .tile {
+      position: relative;
+      border-radius: var(--radius); overflow: hidden;
+      background: radial-gradient(120% 140% at 10% 0%, color-mix(in srgb, var(--card), #fff 6%), var(--card));
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+    }
+    .tile a { display: grid; gap: 8px; justify-items: start; padding: 14px; text-decoration: none; color: inherit; }
+    .tile:active { background: var(--card-press); transform: translateY(1px); }
+
+    .emoji { font-size: 28px; line-height: 1; }
+    .label { font-size: 15px; font-weight: 600; letter-spacing: .2px; }
+    .url { font-size: 12px; color: var(--subtle); word-break: break-all; }
+
+    /* 删除按钮（编辑模式下可见） */
+    .del {
+      position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 999px;
+      display: none; place-items: center; background: #ef4444; color: white; border: none; font-size: 16px; box-shadow: var(--shadow);
+    }
+    body[data-edit="1"] .del { display: grid; }
+
+    /* 底部工具栏 */
+    .toolbar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center; padding: 10px 12px calc(10px + var(--safe-bottom));
+      background: color-mix(in srgb, var(--bg), #000 20%); border-top: 1px solid var(--border);
+      backdrop-filter: saturate(1.2) blur(10px);
+    }
+    .btn {
+      display: inline-flex; justify-content: center; align-items: center; gap: 8px; height: var(--tap);
+      background: var(--accent); color: white; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--accent), #000 10%);
+      font-weight: 700; letter-spacing: .3px; box-shadow: var(--shadow);
+    }
+    .btn.secondary { background: var(--muted); color: var(--text); border-color: var(--border); font-weight: 600; }
+
+    /* 抽屉（添加链接） */
+    .sheet {
+      position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; justify-content: center;
+      background: rgba(0,0,0,.38);
+    }
+    .sheet[open] { display: flex; }
+    .panel {
+      width: min(720px, 100%); background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px 18px 0 0; box-shadow: var(--shadow);
+      padding: 14px 14px max(12px, var(--safe-bottom));
+    }
+    .panel h3 { margin: 2px 0 10px; font-size: 16px; }
+    .field { display: grid; gap: 6px; margin-bottom: 10px; }
+    .field label { font-size: 12px; color: var(--subtle); }
+    .field input {
+      width: 100%; background: var(--muted); color: var(--text); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px; font-size: 16px;
+      outline: none; box-shadow: none;
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .hint { color: var(--subtle); font-size: 12px; margin-top: 6px; }
+
+    /* 焦点可视化 */
+    :is(button, a, input, .btn, .iconbtn):focus { outline: 2px solid var(--ring); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">我的导航 <span class="badge" id="count">0</span></div>
+    <button class="iconbtn" id="themeBtn" title="切换主题" aria-label="切换主题">🌗</button>
+    <button class="iconbtn" id="editBtn" title="编辑链接" aria-label="编辑链接">✏️</button>
+  </header>
+
+  <div class="search-wrap">
+    <div class="search">
+      <span aria-hidden="true">🔎</span>
+      <input id="q" type="search" placeholder="搜索或输入网址…（支持直接粘贴 URL）" />
+      <span class="key">编辑</span>
+    </div>
+  </div>
+
+  <main class="grid" id="grid" aria-live="polite"></main>
+
+  <nav class="toolbar" role="toolbar" aria-label="工具栏">
+    <button class="btn secondary" id="moreBtn">更多</button>
+    <button class="btn secondary" id="importBtn">导入</button>
+    <button class="btn" id="addBtn">添加链接</button>
+  </nav>
+
+  <!-- 添加/编辑 抽屉 -->
+  <dialog class="sheet" id="sheet">
+    <div class="panel">
+      <h3 id="sheetTitle">添加链接</h3>
+      <div class="field">
+        <label for="name">名称</label>
+        <input id="name" placeholder="例如：百度" />
+      </div>
+      <div class="field">
+        <label for="url">网址</label>
+        <input id="url" placeholder="例如：https://www.baidu.com" />
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="emoji">图标（可用 Emoji）</label>
+          <input id="emoji" placeholder="例如：🔎 或 📌" />
+        </div>
+        <div class="field">
+          <label for="desc">简述（可选）</label>
+          <input id="desc" placeholder="例如：中文搜索引擎" />
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn secondary" id="cancelBtn">取消</button>
+        <button class="btn" id="saveBtn">保存</button>
+      </div>
+      <div class="hint">提示：保存后会写入本地浏览器（localStorage），不上传网络。</div>
+    </div>
+  </dialog>
+
+  <script>
+    // =============== 你可以在这里改默认导航（示例） ===============
+    const LINKS_DEFAULT = [
+      { name: '百度', url: 'https://www.baidu.com', icon: '🔎', desc: '中文搜索' },
+      { name: 'Bilibili', url: 'https://www.bilibili.com', icon: '🎬', desc: '视频' },
+      { name: '知乎', url: 'https://www.zhihu.com', icon: '❓', desc: '问答' },
+      { name: '微信网页版', url: 'https://wx.qq.com', icon: '💬', desc: '沟通' },
+      { name: 'Github', url: 'https://github.com', icon: '🐙', desc: '代码' },
+      { name: 'Dribbble', url: 'https://dribbble.com', icon: '🏀', desc: '灵感' },
+      { name: 'Figma', url: 'https://www.figma.com', icon: '🎨', desc: '协作设计' },
+      { name: 'Behance', url: 'https://www.behance.net', icon: '🧩', desc: '作品集' },
+      { name: 'Google', url: 'https://www.google.com', icon: '🌐', desc: 'Search' },
+    ];
+
+    // =============== 状态 & 工具 ===============
+    const STORE_KEY = 'mobile_nav_links_v1';
+    const THEME_KEY = 'mobile_nav_theme_v1';
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    const state = {
+      links: [],
+      editing: false,
+      editingIndex: null,
+    };
+
+    function saveLinks() { localStorage.setItem(STORE_KEY, JSON.stringify(state.links)); }
+    function loadLinks() {
+      try {
+        const raw = localStorage.getItem(STORE_KEY);
+        state.links = raw ? JSON.parse(raw) : [...LINKS_DEFAULT];
+      } catch {
+        state.links = [...LINKS_DEFAULT];
+      }
+    }
+
+    // 主题
+    function setTheme(mode) { // mode: 'auto' | 'light' | 'dark'
+      document.documentElement.setAttribute('data-theme', mode);
+      localStorage.setItem(THEME_KEY, mode);
+      const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', themeColor);
+    }
+    function initTheme() {
+      const saved = localStorage.getItem(THEME_KEY) || 'auto';
+      setTheme(saved);
+    }
+
+    // 渲染
+    function render(kw='') {
+      const grid = $('#grid');
+      grid.innerHTML = '';
+      const keyword = kw.trim().toLowerCase();
+      const filtered = keyword ? state.links.filter(x => (x.name+x.url+(x.desc||'')).toLowerCase().includes(keyword)) : state.links;
+      $('#count').textContent = filtered.length;
+
+      filtered.forEach((item, idx) => {
+        const tile = document.createElement('div');
+        tile.className = 'tile';
+
+        const a = document.createElement('a');
+        a.href = item.url; a.target = '_blank'; a.rel = 'noopener';
+        a.innerHTML = `
+          <div class="emoji">${item.icon || '🔗'}</div>
+          <div class="label">${escapeHtml(item.name || '未命名')}</div>
+          <div class="url">${escapeHtml(item.desc || item.url)}</div>
+        `;
+        tile.appendChild(a);
+
+        const del = document.createElement('button');
+        del.className = 'del'; del.title = '删除'; del.setAttribute('aria-label','删除');
+        del.textContent = '✕';
+        del.addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const i = state.links.indexOf(item);
+          if (i > -1) { state.links.splice(i, 1); saveLinks(); render($('#q').value); }
+        });
+        tile.appendChild(del);
+
+        grid.appendChild(tile);
+      });
+    }
+
+    // 简易转义
+    function escapeHtml(str='') { return str.replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s])); }
+
+    // 添加/编辑 面板
+    function openSheet(editIndex=null) {
+      const sheet = $('#sheet');
+      const isEdit = editIndex !== null && editIndex !== undefined;
+      state.editingIndex = isEdit ? editIndex : null;
+      $('#sheetTitle').textContent = isEdit ? '编辑链接' : '添加链接';
+
+      if (isEdit) {
+        const it = state.links[editIndex];
+        $('#name').value = it.name || '';
+        $('#url').value = it.url || '';
+        $('#emoji').value = it.icon || '';
+        $('#desc').value = it.desc || '';
+      } else {
+        $('#name').value = '';
+        $('#url').value = '';
+        $('#emoji').value = '';
+        $('#desc').value = '';
+      }
+
+      sheet.showModal();
+    }
+    function closeSheet() { $('#sheet').close(); }
+
+    // 事件
+    function initEvents() {
+      $('#editBtn').addEventListener('click', () => {
+        state.editing = !state.editing;
+        document.body.setAttribute('data-edit', state.editing ? '1' : '0');
+        $('#editBtn').textContent = state.editing ? '✅' : '✏️';
+      });
+
+      $('#themeBtn').addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') || 'auto';
+        const next = cur === 'auto' ? 'light' : cur === 'light' ? 'dark' : 'auto';
+        setTheme(next);
+        const label = next === 'auto' ? '🌗' : next === 'light' ? '🌞' : '🌚';
+        $('#themeBtn').textContent = label;
+      });
+
+      $('#q').addEventListener('input', (e) => render(e.target.value));
+      $('#q').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const v = e.currentTarget.value.trim();
+          if (/^https?:\/\//i.test(v)) {
+            window.open(v, '_blank');
+          }
+        }
+      });
+
+      $('#addBtn').addEventListener('click', () => openSheet());
+      $('#cancelBtn').addEventListener('click', closeSheet);
+      $('#saveBtn').addEventListener('click', () => {
+        const name = $('#name').value.trim() || '未命名';
+        const url = $('#url').value.trim();
+        if (!/^https?:\/\//i.test(url)) { alert('请输入以 http:// 或 https:// 开头的地址'); return; }
+        const icon = $('#emoji').value.trim() || '🔗';
+        const desc = $('#desc').value.trim();
+
+        const item = { name, url, icon, desc };
+        if (state.editingIndex !== null) {
+          state.links[state.editingIndex] = item;
+        } else {
+          state.links.push(item);
+        }
+        saveLinks(); closeSheet(); render($('#q').value);
+      });
+
+      // 更多：导出 / 导入 / 恢复默认
+      $('#moreBtn').addEventListener('click', async () => {
+        const choice = await pick(['导出JSON','复制JSON','恢复默认']);
+        if (choice === '导出JSON' || choice === '复制JSON') {
+          const json = JSON.stringify(state.links, null, 2);
+          try {
+            await navigator.clipboard.writeText(json);
+            alert('已复制到剪贴板');
+          } catch {
+            // 兜底方案：下载文件
+            const blob = new Blob([json], {type:'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'nav-links.json'; a.click();
+            URL.revokeObjectURL(a.href);
+          }
+        } else if (choice === '恢复默认') {
+          if (confirm('确定恢复默认示例？这会覆盖你当前的本地导航。')) {
+            state.links = [...LINKS_DEFAULT]; saveLinks(); render($('#q').value);
+          }
+        }
+      });
+
+      $('#importBtn').addEventListener('click', async () => {
+        const text = prompt('粘贴 JSON（[{ name, url, icon, desc }, ...]）：');
+        if (!text) return;
+        try {
+          const arr = JSON.parse(text);
+          if (!Array.isArray(arr)) throw new Error('格式错误');
+          // 基础校验
+          const clean = arr.filter(x => x && /^https?:\/\//i.test(x.url || ''))
+            .map(x => ({ name: String(x.name||'未命名').slice(0,60), url: String(x.url), icon: String(x.icon||'🔗').slice(0,4), desc: x.desc? String(x.desc).slice(0,120): '' }));
+          if (clean.length === 0) throw new Error('没有合法链接');
+          state.links = clean; saveLinks(); render($('#q').value);
+        } catch (e) { alert('导入失败：' + (e.message || '请检查 JSON 格式')); }
+      });
+
+      // 网格内：长按编辑
+      $('#grid').addEventListener('contextmenu', e => e.preventDefault());
+      let pressTimer = null;
+      $('#grid').addEventListener('touchstart', (e) => {
+        const tile = e.target.closest('.tile');
+        if (!tile) return;
+        pressTimer = setTimeout(() => {
+          state.editing = true; document.body.setAttribute('data-edit','1'); $('#editBtn').textContent = '✅';
+        }, 520); // 长按 520ms 进入编辑
+      }, {passive:true});
+      $('#grid').addEventListener('touchend', () => { clearTimeout(pressTimer); }, {passive:true});
+    }
+
+    function pick(options) {
+      return new Promise(resolve => {
+        const txt = options.map((x,i)=> `${i+1}. ${x}`).join('\n');
+        const idx = prompt(`选择：\n${txt}`);
+        const n = Number(idx);
+        resolve(options[n-1]);
+      });
+    }
+
+    // 启动
+    function boot() {
+      initTheme();
+      const mode = document.documentElement.getAttribute('data-theme');
+      $('#themeBtn').textContent = mode==='dark' ? '🌚' : mode==='light' ? '🌞' : '🌗';
+
+      loadLinks();
+      initEvents();
+      render();
+    }
+
+    document.addEventListener('DOMContentLoaded', boot);
+  </script>
+</body>
+</html>
